@@ -703,6 +703,7 @@ body.dragging-task * {
   transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
   white-space: nowrap;
   overflow: hidden;
+  z-index: 2;
 }
 .absence-pill:hover {
   transform: translateY(-1px);

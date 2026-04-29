@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Icon } from './icons.jsx';
-import { supabase, isSupabaseConfigured } from './supabase.js';
+import { supabase } from './supabase.js';
 
 const FALLBACK_EMAIL = 'ltournier@webexpr.fr';
 
@@ -37,10 +37,6 @@ export function FeedbackModal({ onClose }) {
 
   async function submit() {
     if (!description.trim() || status === 'sending') return;
-    if (!isSupabaseConfigured) {
-      sendByMail();
-      return;
-    }
     setStatus('sending');
     setErrorMsg('');
     const { error } = await supabase.from('feedbacks').insert({

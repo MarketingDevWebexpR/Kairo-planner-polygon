@@ -1,0 +1,15 @@
+node_modules
+dist
+.DS_Store
+.vite
+
+# Local Claude Code overrides — do not commit
+.claude/settings.local.json
+
+# Env files (never commit secrets)
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel

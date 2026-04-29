@@ -197,12 +197,25 @@ export function App() {
   }
 
 
-  function addClient(name) {
+  function addClient(name, picked) {
     if (clients.find(c => c.name === name)) return;
-    const usedHues = new Set(clients.map(c => c.hue));
-    const palette = PALETTE.find(p => !usedHues.has(p.h)) || PALETTE[clients.length % PALETTE.length];
-    setClients(prev => [...prev, { name, color: palette.c, hue: palette.h }]);
+    let color, hue;
+    if (picked && picked.c != null && picked.h != null) {
+      color = picked.c;
+      hue = picked.h;
+    } else {
+      const usedHues = new Set(clients.map(c => c.hue));
+      const palette = PALETTE.find(p => !usedHues.has(p.h)) || PALETTE[clients.length % PALETTE.length];
+      color = palette.c;
+      hue = palette.h;
+    }
+    setClients(prev => [...prev, { name, color, hue }]);
     setActiveClients(s => new Set([...s, name]));
+  }
+
+  function setClientColor(name, picked) {
+    if (!picked) return;
+    setClients(prev => prev.map(c => (c.name === name ? { ...c, color: picked.c, hue: picked.h } : c)));
   }
 
   function removeClient(name) {
@@ -274,6 +287,7 @@ export function App() {
         onAddClient={addClient}
         onRemoveClient={removeClient}
         onRenameClient={renameClient}
+        onSetClientColor={setClientColor}
         onSelectAllClients={selectAllClients}
         tasks={tasks}
         confirm={askConfirm}

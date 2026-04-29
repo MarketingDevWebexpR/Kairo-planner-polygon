@@ -11,6 +11,7 @@ import {
   isoWeek,
   initials,
   ABSENCE_REASONS,
+  getHolidayLabel,
 } from './data.js';
 
 const REASON_MAP = Object.fromEntries(ABSENCE_REASONS.map(r => [r.id, r]));
@@ -153,15 +154,27 @@ export function WeekView({ monday, members, tasks, clientMap, onCreateTask, onEd
       <div className="w-corner">
         <span className="label">Sem. {String(isoWeek(monday)).padStart(2, '0')}</span>
       </div>
-      {days.map(d => (
-        <div key={isoDay(d)} className={'w-dayhead' + (isoDay(d) === todayISO ? ' today' : '')}>
-          <span className="d1">{fmtDay(d)}</span>
-          <span className="d2">
-            <span className="date-num">{d.getDate()}</span>
-            <span className="date-mon">{fmtShortMonth(d)}.</span>
-          </span>
-        </div>
-      ))}
+      {days.map(d => {
+        const iso = isoDay(d);
+        const holiday = getHolidayLabel(iso);
+        return (
+          <div
+            key={iso}
+            className={
+              'w-dayhead' +
+              (iso === todayISO ? ' today' : '') +
+              (holiday ? ' holiday' : '')
+            }
+          >
+            <span className="d1">{fmtDay(d)}</span>
+            <span className="d2">
+              <span className="date-num">{d.getDate()}</span>
+              <span className="date-mon">{fmtShortMonth(d)}.</span>
+            </span>
+            {holiday && <span className="holiday-label">{holiday}</span>}
+          </div>
+        );
+      })}
 
       {members.map(m => {
         const { items, laneCount } = lanes(tasksByMember[m.id] || []);
@@ -223,6 +236,8 @@ function FragmentRow({ member, rowH, items, days, todayISO, drag, onMouseDown, o
         <span className={'load' + (items.length >= 4 ? ' hot' : '')}>{items.length}</span>
       </div>
       {days.map((d, dayIdx) => {
+        const dIso = isoDay(d);
+        const isHoliday = !!getHolidayLabel(dIso);
         const isStartOfDrag = drag && drag.memberId === member.id && dayIdx === Math.min(drag.startIdx, drag.endIdx);
         const dragSpan = drag && drag.memberId === member.id ? Math.abs(drag.endIdx - drag.startIdx) + 1 : 0;
         const isMoveTarget = moveTarget && moveTarget.memberId === member.id && moveTarget.dayIdx === dayIdx;
@@ -231,8 +246,9 @@ function FragmentRow({ member, rowH, items, days, todayISO, drag, onMouseDown, o
             key={dayIdx}
             className={
               'w-cell' +
-              (isoDay(d) === todayISO ? ' today' : '') +
-              (isMoveTarget ? ' move-target' : '')
+              (dIso === todayISO ? ' today' : '') +
+              (isMoveTarget ? ' move-target' : '') +
+              (isHoliday ? ' holiday' : '')
             }
             data-member-id={member.id}
             data-day-idx={dayIdx}

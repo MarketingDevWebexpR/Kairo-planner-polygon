@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Icon } from './icons.jsx';
-import { initials } from './data.js';
+import { initials, PALETTE } from './data.js';
 
 export function Sidebar({
   members,
@@ -16,6 +16,7 @@ export function Sidebar({
   onAddClient,
   onRemoveClient,
   onRenameClient,
+  onSetClientColor,
   tasks,
   confirm,
   onOpenFeedback,
@@ -27,6 +28,7 @@ export function Sidebar({
   const [newInitials, setNewInitials] = useState('');
   const [addingClient, setAddingClient] = useState(false);
   const [newClient, setNewClient] = useState('');
+  const [newClientHue, setNewClientHue] = useState(null);
   const [editingClient, setEditingClient] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [editingMember, setEditingMember] = useState(null);
@@ -38,6 +40,31 @@ export function Sidebar({
   const sortedClients = [...clients].sort((a, b) =>
     a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }),
   );
+
+  function defaultNewHue() {
+    const used = new Set(clients.map(c => c.hue));
+    return (PALETTE.find(p => !used.has(p.h)) || PALETTE[0]).h;
+  }
+
+  function openAddClient() {
+    setAddingClient(true);
+    setNewClient('');
+    setNewClientHue(defaultNewHue());
+  }
+
+  function closeAddClient() {
+    setAddingClient(false);
+    setNewClient('');
+    setNewClientHue(null);
+  }
+
+  function commitAddClient() {
+    const trimmed = newClient.trim();
+    if (!trimmed) return;
+    const picked = PALETTE.find(p => p.h === newClientHue) || PALETTE[0];
+    onAddClient(trimmed, picked);
+    closeAddClient();
+  }
 
   function commitRename(oldName) {
     onRenameClient(oldName, editValue);
@@ -85,19 +112,43 @@ export function Sidebar({
           const isEditing = editingClient === c.name;
           if (isEditing) {
             return (
-              <div key={c.name} className="member" style={{ '--c': c.color }}>
-                <span className="swatch"></span>
-                <input
-                  autoFocus
-                  className="rename-input"
-                  value={editValue}
-                  onChange={e => setEditValue(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') commitRename(c.name);
-                    if (e.key === 'Escape') { setEditingClient(null); setEditValue(''); }
-                  }}
-                  onBlur={() => commitRename(c.name)}
-                />
+              <div key={c.name} className="client-edit-block" style={{ '--c': c.color }}>
+                <div className="member">
+                  <span className="swatch"></span>
+                  <input
+                    autoFocus
+                    className="rename-input"
+                    value={editValue}
+                    onChange={e => setEditValue(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') commitRename(c.name);
+                      if (e.key === 'Escape') { setEditingClient(null); setEditValue(''); }
+                    }}
+                  />
+                  <button
+                    className="rename-ok"
+                    onMouseDown={e => e.preventDefault()}
+                    onClick={() => commitRename(c.name)}
+                    title="Valider"
+                  >
+                    OK
+                  </button>
+                </div>
+                <div
+                  className="palette-grid"
+                  onMouseDown={e => e.preventDefault()}
+                >
+                  {PALETTE.map(p => (
+                    <button
+                      key={p.h}
+                      type="button"
+                      className={'palette-swatch' + (c.hue === p.h ? ' selected' : '')}
+                      style={{ background: p.c }}
+                      title={`Teinte ${p.h}°`}
+                      onClick={() => onSetClientColor(c.name, p)}
+                    />
+                  ))}
+                </div>
               </div>
             );
           }
@@ -141,38 +192,35 @@ export function Sidebar({
           );
         })}
         {addingClient ? (
-          <div className="add-member-row">
-            <input
-              autoFocus
-              placeholder="Nom du client"
-              value={newClient}
-              onChange={e => setNewClient(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && newClient.trim()) {
-                  onAddClient(newClient.trim());
-                  setNewClient('');
-                  setAddingClient(false);
-                }
-                if (e.key === 'Escape') {
-                  setNewClient('');
-                  setAddingClient(false);
-                }
-              }}
-            />
-            <button
-              onClick={() => {
-                if (newClient.trim()) {
-                  onAddClient(newClient.trim());
-                  setNewClient('');
-                  setAddingClient(false);
-                }
-              }}
-            >
-              OK
-            </button>
+          <div className="add-client-block">
+            <div className="add-member-row">
+              <input
+                autoFocus
+                placeholder="Nom du client"
+                value={newClient}
+                onChange={e => setNewClient(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitAddClient();
+                  if (e.key === 'Escape') closeAddClient();
+                }}
+              />
+              <button onMouseDown={e => e.preventDefault()} onClick={commitAddClient}>OK</button>
+            </div>
+            <div className="palette-grid" onMouseDown={e => e.preventDefault()}>
+              {PALETTE.map(p => (
+                <button
+                  key={p.h}
+                  type="button"
+                  className={'palette-swatch' + (newClientHue === p.h ? ' selected' : '')}
+                  style={{ background: p.c }}
+                  title={`Teinte ${p.h}°`}
+                  onClick={() => setNewClientHue(p.h)}
+                />
+              ))}
+            </div>
           </div>
         ) : (
-          <button className="btn-ghost" style={{ marginTop: 4, marginLeft: 4 }} onClick={() => setAddingClient(true)}>
+          <button className="btn-ghost" style={{ marginTop: 4, marginLeft: 4 }} onClick={openAddClient}>
             <Icon.Plus s={12} /> Ajouter un client
           </button>
         )}

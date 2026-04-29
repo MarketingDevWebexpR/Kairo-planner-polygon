@@ -287,6 +287,76 @@ input, select, textarea { font: inherit; color: inherit; }
   font-weight: 500;
 }
 
+/* ============ Client color picker ============ */
+.add-client-block,
+.client-edit-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 4px 8px;
+}
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+  padding: 4px 6px 0 6px;
+}
+.palette-swatch {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-width: 18px;
+  border: 1px solid color-mix(in oklch, currentColor 8%, transparent);
+  border-radius: 999px;
+  padding: 0;
+  cursor: pointer;
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+.palette-swatch:hover { transform: scale(1.12); }
+.palette-swatch.selected {
+  box-shadow:
+    0 0 0 2px var(--surface, white),
+    0 0 0 4px var(--ink);
+  transform: scale(1.05);
+}
+
+/* ============ Jours fériés ============ */
+/* Fond gris très clair, sans hachure. */
+:root {
+  --holiday-bg: oklch(98.5% 0.003 250);
+  --holiday-ink: oklch(62% 0.005 250);
+}
+.w-cell.holiday,
+.m-week-cells .m-cell.holiday,
+.w-dayhead.holiday {
+  background: var(--holiday-bg);
+}
+
+/* Header du jour en vue semaine */
+.w-dayhead .holiday-label {
+  font-size: 9.5px;
+  font-style: italic;
+  color: var(--holiday-ink);
+  letter-spacing: 0.01em;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m-holiday {
+  position: absolute;
+  left: 8px;
+  top: 24px;
+  font-size: 9.5px;
+  font-style: italic;
+  color: var(--holiday-ink);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 16px);
+  pointer-events: none;
+}
+
 /* ============ Main ============ */
 .main {
   display: flex;

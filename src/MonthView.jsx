@@ -7,6 +7,7 @@ import {
   diffDays,
   initials,
   ABSENCE_REASONS,
+  getHolidayLabel,
 } from './data.js';
 
 const REASON_MAP = Object.fromEntries(ABSENCE_REASONS.map(r => [r.id, r]));
@@ -205,11 +206,18 @@ function WeekRow({ days, month, tasks, memberOrder, memberById, todayISO, client
         {days.map((d, idx) => {
           const k = isoDay(d);
           const inMonth = d.getMonth() === month.getMonth();
+          const holiday = getHolidayLabel(k);
           const dayItemsCount = items.filter(t => t._s <= idx && t._e >= idx).length;
           return (
             <div
               key={k}
-              className={'m-cell' + (inMonth ? '' : ' out') + (k === todayISO ? ' today' : '')}
+              className={
+                'm-cell' +
+                (inMonth ? '' : ' out') +
+                (k === todayISO ? ' today' : '') +
+                (holiday ? ' holiday' : '')
+              }
+              title={holiday || undefined}
               onClick={(e) => {
                 if (e.target.closest('.m-bar') || e.target.closest('.m-week-more')) return;
                 onCreateTask({ start: k, end: k, half: false });
@@ -219,6 +227,7 @@ function WeekRow({ days, month, tasks, memberOrder, memberById, todayISO, client
                 <span className="num">{d.getDate()}</span>
                 {dayItemsCount > 0 && <span className="count-dot">{dayItemsCount}</span>}
               </div>
+              {holiday && inMonth && <span className="m-holiday">{holiday}</span>}
               {overflowByDay[idx] > 0 && (
                 <button
                   className="m-week-more"

@@ -331,6 +331,35 @@ input, select, textarea { font: inherit; color: inherit; }
   background: var(--holiday-bg);
 }
 
+/* ============ Feedback error state ============ */
+.feedback-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: color-mix(in oklch, var(--danger) 8%, transparent);
+  border: 1px solid color-mix(in oklch, var(--danger) 25%, transparent);
+  border-radius: var(--r-2);
+  color: oklch(45% 0.15 25);
+  font-size: 12px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.feedback-mailto {
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid color-mix(in oklch, var(--danger) 35%, transparent);
+  color: oklch(45% 0.15 25);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: var(--r-2);
+  cursor: pointer;
+}
+.feedback-mailto:hover {
+  background: color-mix(in oklch, var(--danger) 6%, var(--surface));
+}
+
 /* Header du jour en vue semaine */
 .w-dayhead .holiday-label {
   font-size: 9.5px;

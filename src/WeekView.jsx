@@ -216,14 +216,14 @@ function DragGhost({ ghost, clientMap }) {
       </div>
     );
   }
-  const cli = clientMap[task.client] || { color: 'oklch(60% 0 0)', hue: 0 };
+  const cli = clientMap[task.clientId] || { color: 'oklch(60% 0 0)', hue: 0, name: '' };
   return (
     <div
       className="task-pill drag-ghost"
       style={{ ...baseStyle, '--c': cli.color, '--h': cli.hue }}
     >
       <span className="t-title">{task.title}</span>
-      <span className="t-client">{task.client}</span>
+      <span className="t-client">{cli.name}</span>
     </div>
   );
 }
@@ -318,7 +318,7 @@ function FragmentRow({ member, rowH, items, days, todayISO, drag, onMouseDown, o
                   );
                 }
 
-                const cli = clientMap[t.client] || { color: 'oklch(60% 0 0)', hue: 0 };
+                const cli = clientMap[t.clientId] || { color: 'oklch(60% 0 0)', hue: 0, name: '' };
                 return (
                   <div
                     key={t.id}
@@ -327,7 +327,7 @@ function FragmentRow({ member, rowH, items, days, todayISO, drag, onMouseDown, o
                     onMouseDown={(e) => onStartMove(t, e)}
                   >
                     <span className="t-title">{t.title}</span>
-                    {span > 1 || !t.half ? <span className="t-client">{t.client}</span> : null}
+                    {span > 1 || !t.half ? <span className="t-client">{cli.name}</span> : null}
                     <span className="t-actions" onMouseDown={(e) => e.stopPropagation()}>
                       <button title="Modifier" onClick={(e) => { e.stopPropagation(); onEditTask(t); }}>
                         <Icon.Pencil s={13} />

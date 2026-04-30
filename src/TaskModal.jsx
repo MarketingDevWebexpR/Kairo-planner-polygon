@@ -13,17 +13,15 @@ export function TaskModal({ task, members, clients, clientMap, onSave, onDelete,
   const isNew = !task.id;
   const [kind, setKind] = useState(task.kind || 'task');
   const [title, setTitle] = useState(task.title || '');
-  const [client, setClient] = useState(task.client || clients[0]?.name);
+  const [clientId, setClientId] = useState(task.clientId || clients[0]?.id);
   const [reason, setReason] = useState(task.reason || ABSENCE_REASONS[0].id);
   const [memberId, setMemberId] = useState(task.memberId || members[0]?.id);
   const [start, setStart] = useState(task.start || isoDay(new Date()));
   const [end, setEnd] = useState(task.end || task.start || isoDay(new Date()));
   const [half, setHalf] = useState(task.half || false);
   const [notes, setNotes] = useState(task.notes || '');
-  const [linearUrl, setLinearUrl] = useState(task.linearUrl || '');
-
   const dur = diffDays(start, end) + 1;
-  const cli = clientMap[client] || { color: 'oklch(60% 0 0)', hue: 0 };
+  const cli = clientMap[clientId] || { color: 'oklch(60% 0 0)', hue: 0 };
   const isAbsence = kind === 'absence';
   const accent = isAbsence
     ? { color: 'oklch(58% 0.05 250)', hue: 250 }
@@ -53,18 +51,17 @@ export function TaskModal({ task, members, clients, clientMap, onSave, onDelete,
       });
       return;
     }
-    if (!title.trim()) return;
+    if (!title.trim() || !clientId) return;
     onSave({
       id: task.id,
       kind: 'task',
       memberId,
       title: title.trim(),
-      client,
+      clientId,
       start,
       end: half ? start : end,
       half,
       notes: notes.trim(),
-      linearUrl: linearUrl.trim(),
     });
   }
 
@@ -78,7 +75,7 @@ export function TaskModal({ task, members, clients, clientMap, onSave, onDelete,
     ? (isNew ? 'Nouvelle absence' : "Modifier l'absence")
     : (isNew ? 'Nouvelle tâche' : 'Modifier la tâche');
 
-  const canSubmit = isAbsence ? true : title.trim().length > 0;
+  const canSubmit = isAbsence ? true : (title.trim().length > 0 && !!clientId);
 
   return (
     <div
@@ -129,11 +126,11 @@ export function TaskModal({ task, members, clients, clientMap, onSave, onDelete,
               <div className="chip-row">
                 {clients.map(c => (
                   <button
-                    key={c.name}
+                    key={c.id}
                     type="button"
-                    className={'chip' + (client === c.name ? ' on' : '')}
+                    className={'chip' + (clientId === c.id ? ' on' : '')}
                     style={{ '--c': c.color, '--h': c.hue }}
-                    onClick={() => setClient(c.name)}
+                    onClick={() => setClientId(c.id)}
                   >
                     <span className="chip-dot"></span>{c.name}
                   </button>
@@ -218,23 +215,6 @@ export function TaskModal({ task, members, clients, clientMap, onSave, onDelete,
             />
           </div>
 
-          {!isAbsence && (
-            <div className="field">
-              <label>
-                Ticket Linear rattaché{' '}
-                <span style={{ color: 'var(--ink-4)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-                  · optionnel
-                </span>
-              </label>
-              <input
-                type="url"
-                placeholder="https://linear.app/…"
-                value={linearUrl}
-                onChange={e => setLinearUrl(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); }}
-              />
-            </div>
-          )}
         </div>
         <footer>
           {!isNew ? (

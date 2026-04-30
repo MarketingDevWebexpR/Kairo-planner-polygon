@@ -359,6 +359,16 @@ input, select, textarea { font: inherit; color: inherit; }
 .feedback-mailto:hover {
   background: color-mix(in oklch, var(--danger) 6%, var(--surface));
 }
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  font-size: 13px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
 .feedback-success-mark {
   width: 56px;
   height: 56px;

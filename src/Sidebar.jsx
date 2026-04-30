@@ -66,8 +66,8 @@ export function Sidebar({
     closeAddClient();
   }
 
-  function commitRename(oldName) {
-    onRenameClient(oldName, editValue);
+  function commitRename(id) {
+    onRenameClient(id, editValue);
     setEditingClient(null);
     setEditValue('');
   }
@@ -109,10 +109,10 @@ export function Sidebar({
           </button>
         </div>
         {sortedClients.map(c => {
-          const isEditing = editingClient === c.name;
+          const isEditing = editingClient === c.id;
           if (isEditing) {
             return (
-              <div key={c.name} className="client-edit-block" style={{ '--c': c.color }}>
+              <div key={c.id} className="client-edit-block" style={{ '--c': c.color }}>
                 <div className="member">
                   <span className="swatch"></span>
                   <input
@@ -121,14 +121,14 @@ export function Sidebar({
                     value={editValue}
                     onChange={e => setEditValue(e.target.value)}
                     onKeyDown={e => {
-                      if (e.key === 'Enter') commitRename(c.name);
+                      if (e.key === 'Enter') commitRename(c.id);
                       if (e.key === 'Escape') { setEditingClient(null); setEditValue(''); }
                     }}
                   />
                   <button
                     className="rename-ok"
                     onMouseDown={e => e.preventDefault()}
-                    onClick={() => commitRename(c.name)}
+                    onClick={() => commitRename(c.id)}
                     title="Valider"
                   >
                     OK
@@ -145,7 +145,7 @@ export function Sidebar({
                       className={'palette-swatch' + (c.hue === p.h ? ' selected' : '')}
                       style={{ background: p.c }}
                       title={`Teinte ${p.h}°`}
-                      onClick={() => onSetClientColor(c.name, p)}
+                      onClick={() => onSetClientColor(c.id, p)}
                     />
                   ))}
                 </div>
@@ -154,10 +154,10 @@ export function Sidebar({
           }
           return (
             <div
-              key={c.name}
-              className={'member' + (activeClients.has(c.name) ? '' : ' off')}
+              key={c.id}
+              className={'member' + (activeClients.has(c.id) ? '' : ' off')}
               style={{ '--c': c.color }}
-              onClick={() => onToggleClient(c.name)}
+              onClick={() => onToggleClient(c.id)}
             >
               <span className="swatch"></span>
               <span className="name">{c.name}</span>
@@ -166,7 +166,7 @@ export function Sidebar({
                 title="Renommer le client"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setEditingClient(c.name);
+                  setEditingClient(c.id);
                   setEditValue(c.name);
                 }}
               >
@@ -183,7 +183,7 @@ export function Sidebar({
                     confirmLabel: 'Retirer',
                     danger: true,
                   });
-                  if (ok) onRemoveClient(c.name);
+                  if (ok) onRemoveClient(c.id);
                 }}
               >
                 <Icon.X />

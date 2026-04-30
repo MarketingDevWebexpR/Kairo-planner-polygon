@@ -28,22 +28,6 @@ export const PALETTE = [
   { c: 'oklch(63% 0.18 340)', h: 340 }, // rose
 ];
 
-export const DEFAULT_MEMBERS = [
-  { id: 'm1', name: 'Léo',      initials: 'LT' },
-  { id: 'm2', name: 'Jordan',   initials: 'JC' },
-  { id: 'm3', name: 'Isabelle', initials: 'IB' },
-  { id: 'm4', name: 'Laure',    initials: 'LM' },
-  { id: 'm5', name: 'Stoyan',   initials: 'SK' },
-  { id: 'm6', name: 'Viviane',  initials: 'VR' },
-];
-
-export const DEFAULT_CLIENTS = [
-  { name: 'BNP Paribas',   color: PALETTE[0].c, hue: PALETTE[0].h },
-  { name: 'Saint Gobain',  color: PALETTE[1].c, hue: PALETTE[1].h },
-  { name: 'Filet Halard',  color: PALETTE[2].c, hue: PALETTE[2].h },
-  { name: 'Interne',       color: PALETTE[3].c, hue: PALETTE[3].h },
-];
-
 export const ABSENCE_REASONS = [
   { id: 'conges',      label: 'Congés',      icon: '🌴', color: 'oklch(70% 0.04 240)' },
   { id: 'rtt',         label: 'RTT',         icon: '⏱',  color: 'oklch(70% 0.04 240)' },
@@ -170,55 +154,3 @@ export function initials(memberOrName) {
   return String(memberOrName || '').split(/\s+/).map(p => p[0]).join('').slice(0, 2).toUpperCase();
 }
 
-export function seedTasks(memberIds) {
-  const today = new Date();
-  const monday = startOfWeekMonday(today);
-  const T = (offset, dur, mIdx, title, client, half = false, notes = '') => ({
-    id: 'seed_' + Math.random().toString(36).slice(2, 8),
-    kind: 'task',
-    memberId: memberIds[mIdx],
-    title, client, notes,
-    start: isoDay(addDays(monday, offset)),
-    end: isoDay(addDays(monday, offset + dur - 1)),
-    half,
-  });
-  const A = (offset, dur, mIdx, reasonId, half = false) => ({
-    id: 'seed_a_' + Math.random().toString(36).slice(2, 8),
-    kind: 'absence',
-    memberId: memberIds[mIdx],
-    reason: reasonId,
-    start: isoDay(addDays(monday, offset)),
-    end: isoDay(addDays(monday, offset + dur - 1)),
-    half,
-  });
-  return [
-    T(0, 3, 0, 'Atelier discovery', 'BNP Paribas', false, 'Cadrage des besoins, 3 sessions de 2h.'),
-    T(0, 1, 1, 'Brief créa', 'Saint Gobain', 'pm'),
-    T(1, 2, 1, 'Maquettes Hi-Fi', 'Saint Gobain'),
-    T(0, 5, 2, 'Pilotage projet', 'Filet Halard', false, 'Suivi quotidien équipe + reporting client.'),
-    T(2, 2, 3, 'Refonte landing', 'BNP Paribas'),
-    T(0, 1, 3, 'Présentation kickoff', 'BNP Paribas', 'am'),
-    T(3, 2, 4, 'Dev sprint #4', 'Filet Halard'),
-    T(0, 2, 5, 'Tests utilisateurs', 'Saint Gobain'),
-    T(3, 2, 5, 'Synthèse UX', 'Saint Gobain'),
-
-    T(5, 3, 0, 'Workshop stratégie', 'Saint Gobain'),
-    T(5, 1, 1, 'Recette client', 'BNP Paribas', 'am'),
-    T(6, 2, 2, 'Audit accessibilité', 'BNP Paribas'),
-    T(7, 3, 3, 'Direction artistique', 'Filet Halard'),
-    T(5, 5, 4, 'Dev sprint #5', 'Filet Halard'),
-    T(8, 1, 5, 'Atelier copywriting', 'Interne', 'pm'),
-    T(5, 2, 5, 'Recherche UX', 'BNP Paribas'),
-
-    T(-3, 2, 0, 'Restitution étude', 'BNP Paribas'),
-    T(-2, 1, 4, 'Mise en prod', 'Saint Gobain'),
-    T(10, 4, 0, 'Phase 2 design system', 'Saint Gobain'),
-    T(12, 2, 1, 'Itération maquettes', 'Saint Gobain'),
-    T(11, 3, 3, 'Direction artistique v2', 'Filet Halard'),
-
-    A(2, 2, 2, 'conges'),
-    A(7, 1, 4, 'rtt'),
-    A(8, 1, 1, 'formation'),
-    A(13, 5, 5, 'conges'),
-  ];
-}

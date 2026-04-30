@@ -129,7 +129,7 @@ export function MonthView({ month, members, tasks, clientMap, onCreateTask, onEd
                   </div>
                 );
               }
-              const cli = clientMap[t.client] || { color: 'oklch(60% 0 0)', hue: 0 };
+              const cli = clientMap[t.clientId] || { color: 'oklch(60% 0 0)', hue: 0, name: '' };
               return (
                 <div
                   key={t.id}
@@ -140,7 +140,7 @@ export function MonthView({ month, members, tasks, clientMap, onCreateTask, onEd
                   <span className="pt-bar"></span>
                   <div className="pt-main">
                     <div className="pt-title">{t.title}</div>
-                    <div className="pt-sub">{t.client} · {m.name}</div>
+                    <div className="pt-sub">{cli.name} · {m.name}</div>
                   </div>
                   <span className="pt-person">{initials(m)}</span>
                 </div>
@@ -271,13 +271,13 @@ function WeekRow({ days, month, tasks, memberOrder, memberById, todayISO, client
             );
           }
 
-          const cli = clientMap[t.client] || { color: 'oklch(60% 0 0)', hue: 0 };
+          const cli = clientMap[t.clientId] || { color: 'oklch(60% 0 0)', hue: 0, name: '' };
           return (
             <div
               key={t.id}
               className={'m-bar' + (t._truncL ? ' trunc-l' : '') + (t._truncR ? ' trunc-r' : '')}
               style={{ left, width, top, '--c': cli.color, '--h': cli.hue }}
-              title={`${t.title} · ${t.client} · ${m.name}`}
+              title={`${t.title} · ${cli.name} · ${m.name}`}
               onClick={(e) => { e.stopPropagation(); onEditTask(t); }}
             >
               <span className="bar-title">{t.title}</span>

@@ -6,55 +6,50 @@ import { MonthView } from './MonthView.jsx';
 import { TaskModal } from './TaskModal.jsx';
 import { ConfirmModal } from './ConfirmModal.jsx';
 import { FeedbackModal } from './FeedbackModal.jsx';
+import { useKairoData } from './useKairoData.js';
 import {
-  PALETTE,
-  DEFAULT_MEMBERS,
-  DEFAULT_CLIENTS,
   isoDay,
   parseISO,
   addDays,
   startOfWeekMonday,
   fmtMonthYear,
   fmtShortMonth,
-  isoWeek,
   monthWeeks,
-  seedTasks,
 } from './data.js';
 
-const STORAGE_KEY = 'polygon_planning_v2';
+const PREFS_KEY = 'polygon_planning_prefs_v1';
 
-function loadState() {
+function loadPrefs() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    const raw = localStorage.getItem(PREFS_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-function saveState(s) {
+function savePrefs(p) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    localStorage.setItem(PREFS_KEY, JSON.stringify(p));
   } catch {
-    /* quota or private mode — ignore */
+    /* ignore quota errors */
   }
 }
 
 export function App() {
-  const saved = loadState();
+  const {
+    members, clients, tasks, loading, error,
+    addMember, removeMember, renameMember, reorderMembers,
+    addClient, removeClient, renameClient, setClientColor,
+    addTask, updateTask, removeTask,
+  } = useKairoData();
 
-  const [members, setMembers] = useState(saved?.members || DEFAULT_MEMBERS);
-  const [clients, setClients] = useState(saved?.clients || DEFAULT_CLIENTS);
-  const [tasks, setTasks] = useState(saved?.tasks || seedTasks(DEFAULT_MEMBERS.map(m => m.id)));
-  const [view, setView] = useState(saved?.view || 'week');
-  const [cursorISO, setCursorISO] = useState(saved?.cursorISO || isoDay(new Date()));
-  const [activeMembers, setActiveMembers] = useState(
-    new Set(saved?.activeMembers || (saved?.members || DEFAULT_MEMBERS).map(m => m.id)),
-  );
-  const [activeClients, setActiveClients] = useState(
-    new Set(saved?.activeClients || (saved?.clients || DEFAULT_CLIENTS).map(c => c.name)),
-  );
+  const savedPrefs = useMemo(() => loadPrefs(), []);
+
+  const [view, setView] = useState(savedPrefs?.view || 'week');
+  const [cursorISO, setCursorISO] = useState(savedPrefs?.cursorISO || isoDay(new Date()));
+  const [hiddenMemberIds, setHiddenMemberIds] = useState(() => new Set(savedPrefs?.hiddenMemberIds || []));
+  const [hiddenClientIds, setHiddenClientIds] = useState(() => new Set(savedPrefs?.hiddenClientIds || []));
   const [editingTask, setEditingTask] = useState(null);
   const [confirmState, setConfirmState] = useState(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -69,17 +64,15 @@ export function App() {
     });
   }
 
+  // Persist UI prefs only (the data itself lives in Supabase).
   useEffect(() => {
-    saveState({
-      members,
-      clients,
-      tasks,
+    savePrefs({
       view,
       cursorISO,
-      activeMembers: [...activeMembers],
-      activeClients: [...activeClients],
+      hiddenMemberIds: [...hiddenMemberIds],
+      hiddenClientIds: [...hiddenClientIds],
     });
-  }, [members, clients, tasks, view, cursorISO, activeMembers, activeClients]);
+  }, [view, cursorISO, hiddenMemberIds, hiddenClientIds]);
 
   const todayISO = isoDay(new Date());
   const cursor = parseISO(cursorISO);
@@ -87,15 +80,24 @@ export function App() {
 
   const clientMap = useMemo(() => {
     const m = {};
-    clients.forEach(c => (m[c.name] = c));
+    clients.forEach(c => (m[c.id] = c));
     return m;
   }, [clients]);
+
+  const activeMembers = useMemo(
+    () => new Set(members.filter(m => !hiddenMemberIds.has(m.id)).map(m => m.id)),
+    [members, hiddenMemberIds],
+  );
+  const activeClients = useMemo(
+    () => new Set(clients.filter(c => !hiddenClientIds.has(c.id)).map(c => c.id)),
+    [clients, hiddenClientIds],
+  );
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
       if (!activeMembers.has(t.memberId)) return false;
       if (t.kind === 'absence') return true;
-      return activeClients.has(t.client);
+      return activeClients.has(t.clientId);
     });
   }, [tasks, activeMembers, activeClients]);
 
@@ -129,130 +131,40 @@ export function App() {
 
   function upsertTask(t) {
     if (t._delete) {
-      setTasks(prev => prev.filter(x => x.id !== t.id));
+      removeTask(t.id);
       setEditingTask(null);
       return;
     }
-    setTasks(prev => {
-      if (t.id) return prev.map(x => (x.id === t.id ? { ...x, ...t } : x));
-      return [...prev, { ...t, id: 'task_' + Math.random().toString(36).slice(2, 9) }];
-    });
+    if (t.id) updateTask(t);
+    else addTask(t);
     setEditingTask(null);
   }
 
   function deleteTask(id) {
-    setTasks(prev => prev.filter(x => x.id !== id));
+    removeTask(id);
     setEditingTask(null);
   }
 
-  function moveTask(t) {
-    setTasks(prev => prev.map(x => (x.id === t.id ? { ...x, ...t } : x)));
-  }
-
-  function addMember(name, ini) {
-    const id = 'm_' + Math.random().toString(36).slice(2, 7);
-    setMembers(prev => [...prev, { id, name, initials: ini || name.slice(0, 2).toUpperCase() }]);
-    setActiveMembers(s => new Set([...s, id]));
-  }
-
-  function removeMember(id) {
-    setMembers(prev => prev.filter(m => m.id !== id));
-    setTasks(prev => prev.filter(t => t.memberId !== id));
-    setActiveMembers(s => {
-      const n = new Set(s);
-      n.delete(id);
-      return n;
-    });
-  }
-
   function toggleMember(id) {
-    setActiveMembers(s => {
+    setHiddenMemberIds(s => {
       const n = new Set(s);
       if (n.has(id)) n.delete(id); else n.add(id);
       return n;
     });
   }
-
   function selectAllMembers(on) {
-    setActiveMembers(on ? new Set(members.map(m => m.id)) : new Set());
+    setHiddenMemberIds(on ? new Set() : new Set(members.map(m => m.id)));
   }
 
-  function renameMember(id, name, ini) {
-    const trimmedName = (name || '').trim();
-    const trimmedIni = (ini || '').trim().toUpperCase().slice(0, 3);
-    if (!trimmedName) return;
-    setMembers(prev => prev.map(m => (m.id === id ? { ...m, name: trimmedName, initials: trimmedIni || m.initials } : m)));
-  }
-
-  function reorderMembers(draggedId, targetId) {
-    setMembers(prev => {
-      const arr = [...prev];
-      const from = arr.findIndex(m => m.id === draggedId);
-      const to = arr.findIndex(m => m.id === targetId);
-      if (from < 0 || to < 0 || from === to) return prev;
-      const [item] = arr.splice(from, 1);
-      arr.splice(to, 0, item);
-      return arr;
-    });
-  }
-
-
-  function addClient(name, picked) {
-    if (clients.find(c => c.name === name)) return;
-    let color, hue;
-    if (picked && picked.c != null && picked.h != null) {
-      color = picked.c;
-      hue = picked.h;
-    } else {
-      const usedHues = new Set(clients.map(c => c.hue));
-      const palette = PALETTE.find(p => !usedHues.has(p.h)) || PALETTE[clients.length % PALETTE.length];
-      color = palette.c;
-      hue = palette.h;
-    }
-    setClients(prev => [...prev, { name, color, hue }]);
-    setActiveClients(s => new Set([...s, name]));
-  }
-
-  function setClientColor(name, picked) {
-    if (!picked) return;
-    setClients(prev => prev.map(c => (c.name === name ? { ...c, color: picked.c, hue: picked.h } : c)));
-  }
-
-  function removeClient(name) {
-    setClients(prev => prev.filter(c => c.name !== name));
-    setTasks(prev => prev.filter(t => t.client !== name));
-    setActiveClients(s => {
+  function toggleClient(id) {
+    setHiddenClientIds(s => {
       const n = new Set(s);
-      n.delete(name);
+      if (n.has(id)) n.delete(id); else n.add(id);
       return n;
     });
   }
-
-  function renameClient(oldName, newName) {
-    const trimmed = newName.trim();
-    if (!trimmed || trimmed === oldName) return;
-    if (clients.find(c => c.name === trimmed)) return;
-    setClients(prev => prev.map(c => (c.name === oldName ? { ...c, name: trimmed } : c)));
-    setTasks(prev => prev.map(t => (t.client === oldName ? { ...t, client: trimmed } : t)));
-    setActiveClients(s => {
-      if (!s.has(oldName)) return s;
-      const n = new Set(s);
-      n.delete(oldName);
-      n.add(trimmed);
-      return n;
-    });
-  }
-
-  function toggleClient(c) {
-    setActiveClients(s => {
-      const n = new Set(s);
-      if (n.has(c)) n.delete(c); else n.add(c);
-      return n;
-    });
-  }
-
   function selectAllClients(on) {
-    setActiveClients(on ? new Set(clients.map(c => c.name)) : new Set());
+    setHiddenClientIds(on ? new Set() : new Set(clients.map(c => c.id)));
   }
 
   function openCreate(seed = {}) {
@@ -260,7 +172,7 @@ export function App() {
     setEditingTask({
       kind: seed.kind || 'task',
       title: '',
-      client: clients[0]?.name,
+      clientId: clients[0]?.id,
       reason: 'conges',
       memberId: m,
       start: seed.start || todayISO,
@@ -268,6 +180,24 @@ export function App() {
       half: seed.half || false,
       notes: '',
     });
+  }
+
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <span>Chargement…</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="app-loading">
+        <span style={{ color: 'oklch(50% 0.18 25)' }}>
+          Impossible de joindre la base. Réessaie dans un instant.
+        </span>
+      </div>
+    );
   }
 
   return (
@@ -338,7 +268,7 @@ export function App() {
                 if (t._delete) { deleteTask(t.id); return; }
                 setEditingTask(t);
               }}
-              onMoveTask={moveTask}
+              onMoveTask={(t) => updateTask(t)}
               confirm={askConfirm}
             />
           ) : (

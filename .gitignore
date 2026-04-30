@@ -13,3 +13,9 @@ dist
 
 # Vercel
 .vercel
+
+# QA test artifacts
+qa_results*.json
+qa_screenshots*/
+qa_test*.js
+qa_test*.mjs

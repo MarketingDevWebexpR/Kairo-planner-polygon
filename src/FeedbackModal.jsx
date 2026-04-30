@@ -52,7 +52,6 @@ export function FeedbackModal({ onClose }) {
       return;
     }
     setStatus('sent');
-    setTimeout(() => onClose(), 1400);
   }
 
   const canSubmit = description.trim().length > 0 && status !== 'sending';
@@ -74,13 +73,21 @@ export function FeedbackModal({ onClose }) {
         </header>
 
         {isSent ? (
-          <div className="body" style={{ paddingTop: 24, paddingBottom: 32, textAlign: 'center' }}>
-            <div style={{ fontSize: 38, lineHeight: 1, marginBottom: 10 }}>✓</div>
-            <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>Merci pour ton retour&nbsp;!</p>
-            <p style={{ margin: '6px 0 0', color: 'var(--ink-3)', fontSize: 12.5 }}>
-              On l'a bien reçu, on regarde ça vite.
-            </p>
-          </div>
+          <>
+            <div className="body" style={{ paddingTop: 28, paddingBottom: 24, textAlign: 'center' }}>
+              <div className="feedback-success-mark" aria-hidden="true">✓</div>
+              <p style={{ margin: '14px 0 0', fontWeight: 600, fontSize: 15 }}>
+                Merci, ton retour est bien arrivé&nbsp;!
+              </p>
+              <p style={{ margin: '6px 0 0', color: 'var(--ink-3)', fontSize: 12.5 }}>
+                L'équipe produit le verra dans la base.
+              </p>
+            </div>
+            <footer>
+              <span />
+              <button className="btn-primary" onClick={onClose} autoFocus>Fermer</button>
+            </footer>
+          </>
         ) : (
           <>
             <div className="body">

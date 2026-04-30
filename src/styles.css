@@ -359,6 +359,23 @@ input, select, textarea { font: inherit; color: inherit; }
 .feedback-mailto:hover {
   background: color-mix(in oklch, var(--danger) 6%, var(--surface));
 }
+.feedback-success-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  margin: 0 auto;
+  background: color-mix(in oklch, oklch(70% 0.18 145) 18%, var(--surface));
+  color: oklch(45% 0.18 145);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow:
+    0 0 0 4px color-mix(in oklch, oklch(70% 0.18 145) 12%, transparent),
+    inset 0 0 0 1px color-mix(in oklch, oklch(70% 0.18 145) 30%, transparent);
+}
 
 /* Header du jour en vue semaine */
 .w-dayhead .holiday-label {
